@@ -116,7 +116,7 @@ export function urlsInCommand(cmd: string): URL[] {
 }
 
 export function isLocalScreenpipeUrl(url: URL): boolean {
-  return (url.hostname === "localhost" || url.hostname === "127.0.0.1") && url.port === "3030";
+  return url.hostname === "localhost" || url.hostname === "127.0.0.1";
 }
 
 export function domainForUrl(url: URL): string {

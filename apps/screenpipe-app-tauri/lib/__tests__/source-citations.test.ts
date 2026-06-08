@@ -122,6 +122,57 @@ describe("source citations", () => {
     });
   });
 
+  it("derives screenpipe citations from localhost curl calls on custom ports", () => {
+    const searchCitations = sourceCitationsFromMessage({
+      contentBlocks: [
+        {
+          type: "tool",
+          toolCall: {
+            toolName: "bash",
+            args: {
+              command:
+                'curl -s "http://127.0.0.1:4100/search?content_type=ocr&q=roadmap"',
+            },
+            result: '{"data":[]}',
+            isRunning: false,
+          },
+        },
+      ],
+    });
+
+    expect(searchCitations).toHaveLength(1);
+    expect(searchCitations[0]).toMatchObject({
+      kind: "screenpipe",
+      title: "Screenpipe search",
+    });
+    expect(searchCitations[0].subtitle).toContain("ocr");
+    expect(searchCitations[0].subtitle).toContain("query: roadmap");
+
+    const memoryCitations = sourceCitationsFromMessage({
+      contentBlocks: [
+        {
+          type: "tool",
+          toolCall: {
+            toolName: "bash",
+            args: {
+              command:
+                'curl -s "http://localhost:4040/memories?q=Jill%20Benaglio&limit=5"',
+            },
+            result: '{"data":[]}',
+            isRunning: false,
+          },
+        },
+      ],
+    });
+
+    expect(memoryCitations).toHaveLength(1);
+    expect(memoryCitations[0]).toMatchObject({
+      kind: "memory",
+      title: "Screenpipe memories",
+      subtitle: "memory query: Jill Benaglio",
+    });
+  });
+
   it("pulls structured result links out of bash tool output", () => {
     const citations = sourceCitationsFromMessage({
       contentBlocks: [

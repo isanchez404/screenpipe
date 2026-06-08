@@ -76,6 +76,7 @@ describe("sqlTables / sqlVerb", () => {
 describe("url helpers", () => {
   it("identifies the local screenpipe server", () => {
     expect(isLocalScreenpipeUrl(new URL(`${LOCAL}/search`))).toBe(true);
+    expect(isLocalScreenpipeUrl(new URL("http://127.0.0.1:4100/search"))).toBe(true);
     expect(isLocalScreenpipeUrl(new URL("https://example.com"))).toBe(false);
   });
   it("strips www. for the display domain", () => {
@@ -99,6 +100,11 @@ describe("classifyCurl", () => {
     expect(classifyCurl(`curl '${LOCAL}/search?app_name=Slack&q=standup'`)?.label).toBe(
       'Searched Slack "standup"',
     );
+  });
+  it("treats custom localhost ports as local screenpipe curl calls", () => {
+    expect(
+      classifyCurl("curl 'http://localhost:4100/search?app_name=Slack&q=standup'")?.label,
+    ).toBe('Searched Slack "standup"');
   });
   it("labels a raw_sql call by verb + table", () => {
     expect(

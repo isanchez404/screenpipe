@@ -35,6 +35,16 @@ interface MessageLike {
 
 const MAX_DERIVED_CITATIONS = 12;
 const MAX_TEXT_LENGTH = 140;
+const LOCAL_SCREENPIPE_HOST_PATTERN = "(?:localhost|127\\.0\\.0\\.1)";
+const LOCAL_SCREENPIPE_CALL_PATTERN = new RegExp(
+  "(?:https?:\\/\\/)?"
+    + LOCAL_SCREENPIPE_HOST_PATTERN
+    + "(?::\\d+)?\\/[^\\s\"'`)<]+",
+  "g",
+);
+const LOCAL_SCREENPIPE_PATH_PATTERN = new RegExp(
+  LOCAL_SCREENPIPE_HOST_PATTERN + "(?::\\d+)?(\\/[^?\\s\"'`)]+)",
+);
 
 export function sourceCitationsFromMessage(message: MessageLike): SourceCitation[] {
   const explicit = normalizeExplicitCitations(message.sourceCitations);
@@ -438,9 +448,7 @@ function normalizeToolName(toolName: string): string {
 }
 
 function extractScreenpipeApiCalls(command: string): string[] {
-  const matches = command.match(
-    /(?:https?:\/\/)?(?:localhost|127\.0\.0\.1):3030\/[^\s"'`)<]+/g
-  );
+  const matches = command.match(LOCAL_SCREENPIPE_CALL_PATTERN);
   return matches ?? [];
 }
 
@@ -604,7 +612,7 @@ function extractPath(call: string): string {
   try {
     return new URL(normalized).pathname || "/";
   } catch {
-    const match = normalized.match(/:3030(\/[^?\s"'`)]*)/);
+    const match = normalized.match(LOCAL_SCREENPIPE_PATH_PATTERN);
     return match?.[1] ?? "/";
   }
 }
@@ -710,7 +718,7 @@ function cleanUrl(url: string): string | undefined {
 function isLocalScreenpipeUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") && parsed.port === "3030";
+    return parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
   } catch {
     return false;
   }
